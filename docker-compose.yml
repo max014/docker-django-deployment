@@ -1,0 +1,27 @@
+version: '2'
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./mydjango:/src
+      - ./config/nginx:/etc/nginx/conf.d
+      - ./static:/static
+    depends_on:
+      - web
+  web:
+    build: .
+    container_name: django
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn mydjango.wsgi -b 0.0.0.0:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./mydjango:/src
+      - ./static:/static
+    expose:
+      - "8000"
+  db:
+    image: postgres:latest
+    container_name: psql
